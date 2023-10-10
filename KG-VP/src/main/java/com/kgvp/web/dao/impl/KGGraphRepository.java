@@ -1,9 +1,13 @@
 package com.kgvp.web.dao.impl;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kgvp.web.base.util.Neo4jUtil;
 import com.kgvp.web.base.util.StringUtil;
 import com.kgvp.web.dao.KGGraphDao;
 import com.kgvp.web.request.GraphQuery;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
@@ -20,57 +24,54 @@ public class KGGraphRepository implements KGGraphDao {
         HashMap<String, Object> nr = new HashMap<>();
         try {
             String domain = query.getDomain();
-            if (!StringUtil.isBlank(domain)) {
-                String cqr = "";
-                List<String> lis = new ArrayList<>();
-                if (query.getParameters() != null && query.getParameters().size() > 0) {
-                    for (Map<String, String> parameter : query.getParameters()) {
-                        for (Map.Entry<String, String> stringStringEntry : parameter.entrySet()) {
-                            String key = stringStringEntry.getKey();
-                            String it = String.format("n."+key+" contains('%s')", parameter.get(key));
-                            lis.add(it);
-                        }
-                    }
-                    cqr = String.join(" or ", lis);
+            String cqr = "";
+            List<String> lis = new ArrayList<>();
+            if (query.getParameters() != null && query.getParameters().size() > 0) {
+                for (Map<String, String> parameter : query.getParameters()) {
+                    JSONObject jsonObject = JSON.parseObject(JSON.toJSONString(parameter));
+                    String it = String.format("n." + jsonObject.get("key") + " contains('%s')", jsonObject.get("value"));
+                    lis.add(it);
                 }
-                String cqWhere = "";
-                if (!StringUtil.isBlank(query.getNodeName()) || !StringUtil.isBlank(cqr)) {
-
-                    if (!StringUtil.isBlank(query.getNodeName())) {
-                        if (query.getMatchType() == 1) {
-                            cqWhere = String.format("where n.Name ='%s' ", query.getNodeName());
-
-                        } else {
-                            cqWhere = String.format("where n.Name contains('%s')", query.getNodeName());
-                        }
-                    }
-                    String nodeOnly = cqWhere;
-                    if (!StringUtil.isBlank(cqr)) {
-                        if (StringUtil.isBlank(cqWhere)) {
-                            cqWhere = String.format(" where ( %s )", cqr);
-
-                        } else {
-                            cqWhere += String.format(" and ( %s )", cqr);
-                        }
-
-                    }
-                    String nodeSql = String.format("MATCH (n:`%s`) <-[r]->(m) %s return * limit %s", domain, cqWhere, query.getPageSize());
-                    HashMap<String, Object> graphNode = Neo4jUtil.getGraphNodeAndShip(nodeSql);
-                    Object node = graphNode.get("node");
-                    if (node != null) {
-                        nr.put("node", graphNode.get("node"));
-                        nr.put("relationship", graphNode.get("relationship"));
+                cqr = String.join(" and ", lis);
+            }
+            String cqWhere = "";
+            if (!StringUtil.isBlank(query.getNodeName()) || !StringUtil.isBlank(cqr)) {
+                if (!StringUtil.isBlank(query.getNodeName())) {
+                    if (query.getMatchType() == 1) {
+                        cqWhere = String.format("where n.Name ='%s' ", query.getNodeName());
                     } else {
-                        String nodecql = String.format("MATCH (n:`%s`) %s RETURN distinct(n) limit %s", domain, nodeOnly, query.getPageSize());
-                        List<HashMap<String, Object>> nodeItem = Neo4jUtil.getGraphNode(nodecql);
-                        nr.put("node", nodeItem);
-                        nr.put("relationship", new ArrayList<HashMap<String, Object>>());
+                        cqWhere = String.format("where n.Name contains('%s')", query.getNodeName());
                     }
+                }
+                String nodeOnly = cqWhere;
+                if (!StringUtil.isBlank(cqr)) {
+                    if (StringUtil.isBlank(cqWhere)) {
+                        cqWhere = String.format(" where ( %s )", cqr);
+                    } else {
+                        cqWhere += String.format(" and ( %s )", cqr);
+                    }
+                }
+                String nodeSql;
+                if (StringUtils.isNotBlank(domain)) {
+                    nodeSql =String.format("MATCH (n:`%s`) <-[r]->(m) %s return * limit %s", domain, cqWhere, query.getPageSize());
                 } else {
-                    String nodeSql = String.format("MATCH (n:`%s`)-[r]-(m) %s RETURN * limit %s", domain, cqWhere, query.getPageSize());
-                    nr = Neo4jUtil.getGraphNodeAndShip(nodeSql);
+                    nodeSql = String.format("MATCH (n) <-[r]->(m) %s return * limit %s", cqWhere, query.getPageSize());
+                }
+                HashMap<String, Object> graphNode = Neo4jUtil.getGraphNodeAndShip(nodeSql);
+                Object node = graphNode.get("node");
+                if (node != null) {
+                    nr.put("node", graphNode.get("node"));
+                    nr.put("relationship", graphNode.get("relationship"));
+                    return nr;
                 }
             }
+            String nodeSql;
+            if (StringUtils.isNotBlank(domain)) {
+                nodeSql = String.format("MATCH (n:`%s`)-[r]-(m) %s RETURN * limit %s", domain, cqWhere, query.getPageSize());
+            } else {
+                nodeSql = String.format("MATCH (n)-[r]-(m) %s RETURN * limit %s", cqWhere, query.getPageSize());
+            }
+            nr = Neo4jUtil.getGraphNodeAndShip(nodeSql);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -97,7 +98,7 @@ public class KGGraphRepository implements KGGraphDao {
         HashMap<String, Object> result = new HashMap<>();
 
         try {
-            String cypherSql = String.format("MATCH (n) -[r]-(m) where id(n)=%s  return * limit  %s", nodeId,pageSize);
+            String cypherSql = String.format("MATCH (n) -[r]-(m) where id(n)=%s  return * limit  %s", nodeId, pageSize);
             result = Neo4jUtil.getGraphNodeAndShip(cypherSql);
 //            result.put("relationship", new ArrayList<HashMap<String, Object>>());
 
