@@ -1,0 +1,26 @@
+server:
+  port: 8088
+spring:
+  servlet:
+    multipart:
+      max-file-size: 100000000
+      maxRequestSize: 200000000
+  neo4j:
+#      url: bolt://192.168.20.153:7687  #3.x
+      url: neo4j://localhost:7687 #4.x
+      username: neo4j
+      password: 123456
+  datasource:
+      url: jdbc:mysql://192.168.1.184:13306/kg?useSSL=false&serverTimezone=UTC
+      driverClassName: com.mysql.cj.jdbc.Driver
+      username: root
+      password: 123456
+      type: com.zaxxer.hikari.HikariDataSource
+  redis:
+    host: 192.168.1.184
+    port: 6379
+    password: 123456
+    database: 4
+mybatis:
+  typeAliasesPackage: com.kgvp.kgmaker.entity
+  mapperLocations: classpath*:/mapping/*.xml

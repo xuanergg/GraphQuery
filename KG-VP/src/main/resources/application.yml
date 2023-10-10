@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: kg-vp
+  profiles:
+    active: dev
+
+
+
+
