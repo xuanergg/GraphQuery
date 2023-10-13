@@ -32,21 +32,13 @@ public class Neo4jUtil implements AutoCloseable {
         Neo4jUtil.neo4jDriver = neo4jDriver;
     }
 
-    /**
-     * 测试neo4j连接是否打开
-     */
+
     public static boolean isNeo4jOpen() {
         try (Session session = neo4jDriver.session()) {
             log.debug("连接成功：" + session.isOpen());
             return session.isOpen();
         }
     }
-
-    /**
-     * neo4j驱动执行cypher
-     *
-     * @param cypherSql cypherSql
-     */
 
     public static void runCypherSql(String cypherSql) {
         try (Session session = neo4jDriver.session()) {
@@ -63,11 +55,6 @@ public class Neo4jUtil implements AutoCloseable {
         }
     }
 
-    /**
-     * 返回节点集合，此方法不保留关系
-     *
-     * @param cypherSql cypherSql
-     */
     public static List<HashMap<String, Object>> getGraphNode(String cypherSql) {
         List<HashMap<String, Object>> ents = new ArrayList<HashMap<String, Object>>();
         try (Session session = neo4jDriver.session()) {
@@ -101,10 +88,7 @@ public class Neo4jUtil implements AutoCloseable {
         return ents;
     }
 
-    /**
-     * 获取数据库索引
-     * @return
-     */
+
     public static List<HashMap<String, Object>> getGraphIndex() {
         List<HashMap<String, Object>> ents = new ArrayList<HashMap<String, Object>>();
         try (Session session = neo4jDriver.session()) {
@@ -176,10 +160,7 @@ public class Neo4jUtil implements AutoCloseable {
         }
         return ent;
     }
-    /**
-     * 删除索引
-     * @param label
-     */
+
     public static void deleteIndex(String label) {
         try (Session session = neo4jDriver.session()) {
             String cypherSql=String.format("DROP INDEX ON :`%s`(name)",label);
@@ -189,11 +170,7 @@ public class Neo4jUtil implements AutoCloseable {
         }
     }
 
-    /**
-     * 创建索引
-     * @param label
-     * @param prop
-     */
+
     public static void createIndex(String label,String prop) {
         try (Session session = neo4jDriver.session()) {
             String cypherSql=String.format("CREATE INDEX ON :`%s`(%s)",label,prop);
@@ -210,12 +187,7 @@ public class Neo4jUtil implements AutoCloseable {
         return null;
     }
 
-    /**
-     * 获取一个标准的表格，一般用于语句里使用as
-     *
-     * @param cypherSql
-     * @return
-     */
+
     public static List<HashMap<String, Object>> getGraphTable(String cypherSql) {
         List<HashMap<String, Object>> resultData = new ArrayList<HashMap<String, Object>>();
         try (Session session = neo4jDriver.session()) {
@@ -240,12 +212,6 @@ public class Neo4jUtil implements AutoCloseable {
         return resultData;
     }
 
-    /**
-     * 返回关系，不保留节点内容
-     *
-     * @param cypherSql
-     * @return
-     */
     public static List<HashMap<String, Object>> getGraphRelationShip(String cypherSql) {
         List<HashMap<String, Object>> ents = new ArrayList<HashMap<String, Object>>();
         try (Session session = neo4jDriver.session()) {
@@ -284,11 +250,7 @@ public class Neo4jUtil implements AutoCloseable {
     }
 
 
-    /**
-     * 获取值类型的结果,如count,uuid
-     *
-     * @return 1 2 3 等数字类型
-     */
+
     public static long getGraphValue(String cypherSql) {
         long val = 0;
         try (Session session = neo4jDriver.session()) {
@@ -306,12 +268,6 @@ public class Neo4jUtil implements AutoCloseable {
         return val;
     }
 
-    /**
-     * 返回节点和关系，节点node,关系relationship,路径path,集合list,map
-     *
-     * @param cypherSql
-     * @return
-     */
     public static HashMap<String, Object> getGraphNodeAndShip(String cypherSql) {
         HashMap<String, Object> mo = new HashMap<String, Object>();
         try (Session session = neo4jDriver.session()) {
@@ -435,23 +391,12 @@ public class Neo4jUtil implements AutoCloseable {
     }
 
 
-    /**
-     * 去掉json键的引号，否则neo4j会报错
-     *
-     * @param jsonStr
-     * @return
-     */
+
     public static String getFilterPropertiesJson(String jsonStr) {
         return jsonStr.replaceAll("\"(\\w+)\"(\\s*:\\s*)", "$1$2"); // 去掉key的引号
     }
 
-    /**
-     * 对象转json，key=value,用于 cypher set语句
-     *
-     * @param obj
-     * @param <T>
-     * @return
-     */
+
     public static <T> String getKeyValCyphersql(T obj) {
         Map<String, Object> map = new HashMap<String, Object>();
         List<String> sqlList = new ArrayList<String>();
@@ -512,9 +457,6 @@ public class Neo4jUtil implements AutoCloseable {
 
 
 
-    /**
-     * 返回单个节点信息
-     */
     public static HashMap<String, Object> getOneNode(String cypherSql) {
         HashMap<String, Object> ret = new HashMap<String, Object>();
         try (Session session = neo4jDriver.session()) {

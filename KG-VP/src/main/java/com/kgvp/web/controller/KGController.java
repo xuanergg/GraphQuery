@@ -23,7 +23,7 @@ public class KGController {
     private KGGraphService kgGraphService;
 
     @PostMapping(value = "/queryGraphResult")
-    public R<HashMap<String, Object>> queryGraphResult(@RequestBody GraphQuery query) {
+    public R queryGraphResult(@RequestBody GraphQuery query) {
         try {
             HashMap<String, Object> graphData = kgGraphService.queryGraphResult(query);
             return R.success(graphData);
@@ -49,26 +49,21 @@ public class KGController {
     public R<String> getRelationNodeCount(String domain, long nodeId) {
         try {
             long totalCount = 0;
-            if (!StringUtil.isBlank(domain)) {
                 totalCount = kgGraphService.getRelationNodeCount(domain, nodeId);
                 return R.success(totalCount);
-            }
         } catch (Exception e) {
             e.printStackTrace();
             return R.error(e.getMessage());
         }
-        return R.error("操作失败");
     }
 
     @RequestMapping(value = "/getMoreRelationNode")
     public R<HashMap<String, Object>> getMoreRelationNode(String domain, String nodeId,String pageSize) {
         try {
-            if (!StringUtil.isBlank(domain)) {
                 HashMap<String, Object> graphModel = kgGraphService.getMoreRelationNode(domain, nodeId,pageSize);
                 if (graphModel != null) {
                     return R.success(graphModel);
                 }
-            }
         } catch (Exception e) {
             e.printStackTrace();
             return R.error(e.getMessage());
